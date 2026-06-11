@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FOH Pass — Manage Event</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   FOH Design System — tokens
+   ========================================================================= */
+:root{
+  --teal:#085859; --teal-700:#06403f; --aqua:#0DB5C6; --aqua-600:#0aa0b0;
+  --mint:#C9E9EB; --navy:#0A1628; --sand:#F5E6D3; --coral:#E8735A; --gold:#D4A853;
+  --success:#1B8A5A; --warning:#E5A100; --error:#C0392B;
+  --white:#fff; --offwhite:#F8F9FA; --lightgray:#E9ECEF; --midgray:#6C757D; --charcoal:#2D3436;
+
+  --sig-grad:linear-gradient(135deg,#085859,#0DB5C6);
+  --side-grad:linear-gradient(180deg,#085859 0%,#06403f 100%);
+
+  --shadow-sm:0 1px 3px rgba(8,88,89,.08);
+  --shadow-md:0 4px 12px rgba(8,88,89,.12);
+  --shadow-lg:0 12px 40px rgba(8,88,89,.16);
+
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:24px; --r-full:9999px;
+
+  --sp-xs:4px; --sp-sm:8px; --sp-md:12px; --sp-base:16px; --sp-lg:24px; --sp-xl:32px; --sp-2xl:48px;
+
+  --side-w:260px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--offwhite); color:var(--charcoal);
+  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--aqua); text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* =========================================================================
+   App shell
+   ========================================================================= */
+.app{display:flex; min-height:100vh}
+
+/* ---- Sidebar (FIX #1: brand teal, not purple/pink) ---- */
+.sidebar{
+  width:var(--side-w); flex:0 0 var(--side-w);
+  background:var(--side-grad); color:#fff;
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  padding:var(--sp-lg) 0;
+}
+.sidebar::-webkit-scrollbar{width:6px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18); border-radius:99px}
+.brand{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 var(--sp-lg) var(--sp-lg);
+  font-weight:800; font-size:22px; letter-spacing:-.5px;
+}
+.brand .dot{color:var(--aqua)}
+.brand .eye{opacity:.6; cursor:pointer}
+.nav{list-style:none; margin:var(--sp-sm) 0 0; padding:0}
+.nav li a{
+  display:flex; align-items:center; gap:var(--sp-md);
+  padding:11px var(--sp-lg); color:rgba(255,255,255,.86);
+  font-weight:500; font-size:14px; position:relative;
+}
+.nav li a:hover{background:rgba(255,255,255,.08); color:#fff; text-decoration:none}
+.nav li a.active{background:rgba(255,255,255,.12); color:#fff}
+.nav li a.active::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--aqua)}
+.nav .ico{width:20px; height:20px; flex:0 0 20px; opacity:.92}
+.nav .caret{margin-left:auto; opacity:.5; width:14px; height:14px}
+
+/* ---- Main column ---- */
+.main{flex:1 1 auto; min-width:0; display:flex; flex-direction:column}
+
+/* ---- Top bar ---- */
+.topbar{
+  display:flex; align-items:center; gap:var(--sp-md);
+  padding:var(--sp-md) var(--sp-lg); background:var(--offwhite);
+  justify-content:flex-end;
+}
+.company-switch{
+  display:flex; align-items:center; gap:var(--sp-sm);
+  background:#fff; border:1px solid var(--lightgray); border-radius:var(--r-sm);
+  padding:8px 12px; font-weight:500; min-width:200px; justify-content:space-between;
+  box-shadow:var(--shadow-sm);
+}
+.credits{
+  display:flex; align-items:center; gap:6px; background:#fff;
+  border:1px solid var(--lightgray); border-radius:var(--r-sm); padding:8px 14px;
+  font-weight:500; color:var(--teal); box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.bell{position:relative; cursor:pointer; color:var(--midgray)}
+.bell .badge{
+  position:absolute; top:-6px; right:-6px; background:var(--coral); color:#fff;
+  font-size:10px; font-weight:700; width:16px; height:16px; border-radius:99px;
+  display:grid; place-items:center;
+}
+.avatar{
+  display:flex; align-items:center; gap:6px; cursor:pointer;
+}
+.avatar .circle{
+  width:34px; height:34px; border-radius:99px; background:var(--navy); color:#fff;
+  display:grid; place-items:center; font-weight:600; font-size:13px;
+}
+
+/* ---- Content scroll area ---- */
+.content{padding:0 var(--sp-lg) var(--sp-xl); flex:1 1 auto}
+.wrap{max-width:1180px; margin:0 auto}
+
+/* =========================================================================
+   Event header card
+   ========================================================================= */
+.event-head{
+  background:#fff; border-radius:var(--r-lg); box-shadow:var(--shadow-sm);
+  padding:var(--sp-lg); display:flex; justify-content:space-between; gap:var(--sp-lg);
+  flex-wrap:wrap;
+}
+.eh-left{display:flex; gap:var(--sp-base); align-items:flex-start; min-width:0}
+/* Event artwork thumbnail — rendered only when an artwork has been uploaded */
+.event-art{width:74px; height:74px; flex:0 0 auto; border-radius:var(--r-md); overflow:hidden;
+  background:var(--teal); display:grid; place-items:center; box-shadow:var(--shadow-sm)}
+.event-art img{width:100%; height:100%; object-fit:cover}
+.event-head .title-row{display:flex; align-items:center; gap:var(--sp-md); flex-wrap:wrap}
+.event-head h1{margin:0; font-size:30px; font-weight:700; color:var(--teal); letter-spacing:-.5px}
+.status-pill{font-weight:600; font-size:12px; padding:5px 12px; border-radius:var(--r-full); display:inline-flex; align-items:center; gap:6px}
+.pill-unpub{background:#FEF3CD; color:#8a6d00}
+.pill-pub{background:rgba(27,138,90,.12); color:var(--success)}
+.live-dot{width:7px; height:7px; border-radius:50%; background:var(--success); display:inline-block}
+.event-meta{margin-top:10px; color:var(--midgray); display:flex; align-items:center; gap:8px; font-size:13px}
+.event-url{margin-top:6px; font-size:13px; word-break:break-all}
+
+/* Header actions: primary row (Floor Plan + Publish) over utilities (Preview + Copy link) */
+.event-actions{display:flex; flex-direction:column; align-items:flex-end; gap:var(--sp-md)}
+.ea-primary{display:flex; gap:var(--sp-sm); align-items:center}
+.ea-secondary{display:flex; gap:var(--sp-sm)}
+.btn-publish{background:var(--aqua); color:#fff; font-size:14px; padding:11px 22px; box-shadow:0 4px 12px rgba(13,181,198,.32)}
+.btn-publish:hover{background:var(--aqua-600)}
+.pub-state{display:none; align-items:center; gap:var(--sp-md)}
+.pub-live{display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--success)}
+/* published-state swaps */
+.event-head .pill-pub{display:none}
+.event-head.published .pill-unpub{display:none}
+.event-head.published .pill-pub{display:inline-flex}
+.event-head.published .btn-publish{display:none}
+.event-head.published .pub-state{display:inline-flex}
+
+/* =========================================================================
+   Buttons
+   ========================================================================= */
+.btn{
+  display:inline-flex; align-items:center; gap:8px; justify-content:center;
+  font-family:inherit; font-weight:600; font-size:13px; cursor:pointer;
+  border-radius:var(--r-sm); padding:9px 16px; border:1px solid transparent;
+  transition:background .15s,border-color .15s,color .15s; white-space:nowrap;
+}
+.btn-primary{background:var(--teal); color:#fff}
+.btn-primary:hover{background:var(--aqua)}
+.btn-accent{background:var(--aqua); color:#fff}
+.btn-accent:hover{background:var(--aqua-600)}
+.btn-ghost{background:#fff; border-color:var(--lightgray); color:var(--teal)}
+.btn-ghost:hover{border-color:var(--aqua); color:var(--aqua)}
+.btn-danger{background:var(--error); color:#fff}
+.btn-danger:hover{background:#a93226}
+.btn-lg{padding:12px 40px; font-size:14px}
+.btn-sm{padding:7px 12px; font-size:12px}
+.btn-block{width:100%}
+
+/* =========================================================================
+   Stat bar  (FIX #4 sizing, #5 FOC->Complimentary)
+   ========================================================================= */
+.stats{display:grid; grid-template-columns:repeat(6,1fr); gap:var(--sp-md); margin-top:var(--sp-md)}
+.stat{
+  background:#fff; border-radius:var(--r-md); box-shadow:var(--shadow-sm);
+  padding:14px 16px; border-left:3px solid var(--mint); min-width:0;
+}
+.stat .num{font-size:26px; font-weight:700; color:var(--teal); line-height:1.1}
+.stat .num.muted{color:var(--charcoal)}
+.stat .lbl{
+  font-size:10px; font-weight:600; letter-spacing:.4px; text-transform:uppercase;
+  color:var(--midgray); margin-top:4px;
+}
+.stat.sales{border-left-color:var(--aqua)}
+.stat.sales .num{color:var(--aqua)}
+
+/* =========================================================================
+   Tab navigation  (FIX #2 Import + #3 Check-Ins moved out)
+   ========================================================================= */
+.tabbar{
+  display:flex; align-items:center; gap:var(--sp-md); margin-top:var(--sp-md);
+  border-bottom:1px solid var(--lightgray); flex-wrap:wrap; padding-bottom:0;
+}
+.tabs{display:flex; gap:2px; overflow-x:auto; flex:1 1 auto; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  appearance:none; background:none; border:none; font-family:inherit; cursor:pointer;
+  padding:12px 14px; font-size:14px; font-weight:500; color:var(--midgray);
+  border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap;
+}
+.tab:hover{color:var(--teal)}
+.tab.active{color:var(--teal); font-weight:600; border-bottom-color:var(--aqua)}
+.tabbar-actions{display:flex; gap:var(--sp-sm); padding:6px 0}
+
+/* Export dropdown (native <details>) — paired with Import */
+.exp-menu{position:relative}
+.exp-menu summary{display:inline-flex; list-style:none; cursor:pointer}
+.exp-menu summary::-webkit-details-marker{display:none}
+.exp-menu summary::marker{content:""}
+.exp-menu .chev-sm{transition:transform .15s; opacity:.7}
+.exp-menu[open] .chev-sm{transform:rotate(180deg)}
+.exp-list{
+  position:absolute; right:0; top:calc(100% + 6px); background:#fff;
+  border:1px solid var(--lightgray); border-radius:var(--r-md); box-shadow:var(--shadow-md);
+  padding:6px; min-width:212px; z-index:30; display:flex; flex-direction:column; gap:2px;
+}
+.exp-item{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none;
+  border:none; font-family:inherit; font-size:13px; font-weight:500; color:var(--charcoal);
+  padding:9px 10px; border-radius:var(--r-sm); cursor:pointer;
+}
+.exp-item:hover{background:var(--offwhite); color:var(--teal)}
+.exp-item svg{color:var(--teal); flex:0 0 auto}
+
+/* =========================================================================
+   Panels / cards
+   ========================================================================= */
+.panel{display:none; margin-top:var(--sp-lg)}
+.panel.active{display:block}
+.card{
+  background:#fff; border-radius:var(--r-lg); box-shadow:var(--shadow-sm);
+  padding:var(--sp-xl);
+}
+.card-head{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-md);
+  padding-bottom:var(--sp-base); border-bottom:1px solid var(--lightgray); margin-bottom:var(--sp-xl);
+}
+.card-head h2{margin:0; font-size:22px; font-weight:700; color:var(--charcoal)}
+.section-title{
+  font-size:20px; font-weight:700; color:var(--charcoal);
+  margin:var(--sp-2xl) 0 var(--sp-base); padding-bottom:var(--sp-sm);
+  border-bottom:1px solid var(--lightgray);
+}
+.section-title:first-child{margin-top:0}
+
+/* =========================================================================
+   Forms
+   ========================================================================= */
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-lg)}
+.grid-2{display:grid; grid-template-columns:repeat(2,1fr); gap:var(--sp-lg)}
+.field{display:flex; flex-direction:column; gap:6px; margin-bottom:var(--sp-base)}
+.field > label, .lbl-field{font-size:12px; font-weight:600; color:var(--charcoal); display:flex; align-items:center; gap:6px}
+.req{color:var(--error)}
+.help{font-size:11px; color:var(--midgray); margin-top:-2px}
+input[type=text], input[type=url], input[type=number], input[type=date], select, textarea{
+  font-family:inherit; font-size:14px; color:var(--charcoal); background:#fff;
+  border:1px solid var(--lightgray); border-radius:var(--r-sm); padding:10px 12px; width:100%;
+  transition:border-color .15s, box-shadow .15s;
+}
+input:focus, select:focus, textarea:focus{
+  outline:none; border-color:var(--aqua); box-shadow:0 0 0 3px rgba(13,181,198,.15);
+}
+input:disabled, select:disabled{background:var(--offwhite); color:var(--midgray)}
+textarea{resize:vertical; min-height:90px}
+.file-input{
+  display:flex; align-items:center; gap:12px; border:1px solid var(--lightgray);
+  border-radius:var(--r-sm); padding:8px 10px; background:#fff; font-size:13px; color:var(--midgray);
+}
+.file-input .fake-btn{background:var(--offwhite); border:1px solid var(--lightgray); border-radius:6px; padding:6px 12px; color:var(--charcoal); font-weight:500}
+.color-input{height:42px; padding:4px; cursor:pointer}
+.preview-square{width:84px; height:84px; border-radius:var(--r-md); background:var(--teal); display:grid; place-items:center; box-shadow:var(--shadow-sm)}
+
+/* tooltip (FIX #9) */
+.tip{position:relative; display:inline-flex; cursor:help}
+.tip .tip-ico{width:14px; height:14px; border-radius:99px; background:var(--mint); color:var(--teal); font-size:10px; font-weight:700; display:grid; place-items:center}
+.tip .tip-text{
+  position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+  background:var(--navy); color:#fff; font-size:11px; font-weight:400; line-height:1.4;
+  padding:8px 10px; border-radius:6px; width:190px; opacity:0; pointer-events:none;
+  transition:opacity .15s; z-index:5; text-align:center;
+}
+.tip:hover .tip-text{opacity:1}
+
+/* Guest permissions group (FIX #15) */
+.permissions{
+  background:var(--offwhite); border:1px solid var(--lightgray); border-radius:var(--r-md);
+  padding:var(--sp-lg); margin-top:var(--sp-base);
+}
+.permissions .group-label{font-size:13px; font-weight:600; color:var(--teal); margin-bottom:var(--sp-base)}
+.checks{display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-base) var(--sp-lg)}
+.check{display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--charcoal); cursor:pointer}
+.check input{width:18px; height:18px; accent-color:var(--teal); margin:1px 0 0; flex:0 0 auto; cursor:pointer}
+.subgroup{margin-top:var(--sp-lg)}
+.subgroup .group-label{font-size:13px; font-weight:600; color:var(--charcoal); margin-bottom:8px}
+
+.form-actions{display:flex; justify-content:center; margin-top:var(--sp-2xl)}
+
+/* ===== Add Ticket Type form ===== */
+.form-header{display:flex; align-items:flex-end; justify-content:space-between; gap:var(--sp-base); padding-bottom:var(--sp-base); border-bottom:1px solid var(--lightgray); margin-bottom:var(--sp-xl)}
+.form-header .back{font-family:inherit; font-size:12px; color:var(--midgray); display:inline-flex; align-items:center; gap:5px; background:none; border:none; cursor:pointer; padding:0; margin-bottom:8px}
+.form-header .back:hover{color:var(--teal)}
+.form-header h2{margin:0; font-size:22px; font-weight:700; color:var(--charcoal)}
+.fh-actions{display:flex; gap:var(--sp-sm); flex:0 0 auto}
+
+/* price input with currency prefix */
+.input-prefix{display:flex; align-items:stretch; border:1px solid var(--lightgray); border-radius:var(--r-sm); overflow:hidden; background:#fff}
+.input-prefix .pfx{background:var(--offwhite); padding:0 12px; font-size:13px; font-weight:600; color:var(--midgray); display:flex; align-items:center; border-right:1px solid var(--lightgray)}
+.input-prefix input{border:none; border-radius:0}
+.input-prefix input:focus{box-shadow:none}
+.input-prefix:focus-within{border-color:var(--aqua); box-shadow:0 0 0 3px rgba(13,181,198,.15)}
+
+/* toggle setting cards (replaces the loose checkboxes) */
+.toggles{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:var(--sp-md)}
+.toggle-card{display:flex; gap:12px; align-items:flex-start; border:1px solid var(--lightgray); border-radius:var(--r-md); padding:14px; background:#fff; cursor:pointer; transition:border-color .15s}
+.toggle-card:hover{border-color:var(--aqua)}
+.toggle-card .tc-text{display:flex; flex-direction:column}
+.toggle-card .tc-label{font-size:13px; font-weight:600; color:var(--charcoal)}
+.toggle-card .tc-help{font-size:11.5px; color:var(--midgray); margin-top:3px; line-height:1.45}
+.switch{position:relative; width:38px; height:22px; flex:0 0 auto; margin-top:1px}
+.switch input{position:absolute; opacity:0; width:0; height:0}
+.switch .track{position:absolute; inset:0; background:var(--lightgray); border-radius:99px; transition:background .15s}
+.switch .thumb{position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; box-shadow:0 1px 2px rgba(0,0,0,.25); transition:transform .15s}
+.switch input:checked ~ .track{background:var(--teal)}
+.switch input:checked ~ .thumb{transform:translateX(16px)}
+.switch input:focus-visible ~ .track{box-shadow:0 0 0 3px rgba(13,181,198,.35)}
+
+/* mutually-exclusive choice cards (radio) — e.g. order approval flow */
+.radio-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:var(--sp-md)}
+.radio-card{display:flex; gap:11px; align-items:flex-start; border:1px solid var(--lightgray); border-radius:var(--r-md); padding:14px; cursor:pointer; transition:border-color .15s, background .15s; position:relative}
+.radio-card:hover{border-color:var(--aqua)}
+.radio-card input{position:absolute; opacity:0; width:0; height:0}
+.rc-dot{width:18px; height:18px; border-radius:50%; border:2px solid var(--lightgray); flex:0 0 auto; margin-top:1px; position:relative; transition:border-color .15s}
+.radio-card input:checked ~ .rc-dot{border-color:var(--teal)}
+.radio-card input:checked ~ .rc-dot::after{content:""; position:absolute; inset:3px; border-radius:50%; background:var(--teal)}
+.radio-card input:checked ~ .rc-text .rc-label{color:var(--teal)}
+.radio-card:has(input:checked){border-color:var(--teal); background:rgba(8,88,89,.03)}
+.radio-card input:focus-visible ~ .rc-dot{box-shadow:0 0 0 3px rgba(13,181,198,.35)}
+.rc-text{display:flex; flex-direction:column}
+.rc-label{font-size:13px; font-weight:600; color:var(--charcoal)}
+.rc-help{font-size:11.5px; color:var(--midgray); margin-top:3px; line-height:1.45}
+
+/* date + time pair */
+.dt-col{display:flex; flex-direction:column; gap:6px}
+.dt-row{display:grid; grid-template-columns:1.4fr 1fr; gap:8px}
+
+/* =========================================================================
+   Banners (FIX #18 notifications, #25 url warning)
+   ========================================================================= */
+.banner{border-radius:var(--r-sm); padding:12px 16px; font-size:13px; display:flex; gap:10px; align-items:flex-start}
+.banner-warn{background:#FFF8E1; border-left:3px solid var(--warning); color:#7a5b00}
+.banner-info{background:var(--mint); border-left:3px solid var(--teal); color:var(--teal)}
+.banner .b-ico{flex:0 0 auto; font-size:15px; line-height:1.2}
+
+/* =========================================================================
+   Notification trigger cards (FIX #22)
+   ========================================================================= */
+.trigger{
+  background:var(--offwhite); border:1px solid var(--lightgray); border-radius:var(--r-md);
+  padding:var(--sp-lg); margin-bottom:var(--sp-base);
+}
+.trigger h3{margin:0 0 2px; font-size:15px; font-weight:600; color:var(--charcoal)}
+.trigger .sub{font-size:12px; color:var(--midgray); font-style:italic; margin:0 0 var(--sp-md)}
+.trigger .row{display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-base); margin-top:var(--sp-sm)}
+
+/* Notifications: 3-column grid of trigger cards, channels stacked + icon-coded */
+.notif-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:var(--sp-base); margin-bottom:var(--sp-base)}
+.notif-grid .trigger{margin-bottom:0}
+.notif-grid .trigger h3{min-height:42px}
+.channels{display:flex; flex-direction:column; gap:var(--sp-sm); margin-top:var(--sp-sm)}
+.ch-row{display:flex; align-items:center; gap:12px}
+.ch-row select{flex:1 1 auto; min-width:0}
+.ch-ico{width:38px; height:38px; border-radius:9px; display:grid; place-items:center; flex:0 0 auto}
+.ch-ico svg{width:20px; height:20px}
+.ch-sms{background:rgba(13,181,198,.14); color:var(--aqua)}
+.ch-email{background:var(--mint); color:var(--teal)}
+.ch-wa{background:rgba(27,138,90,.14); color:var(--success)}
+
+/* =========================================================================
+   Operations groups (FIX #23 grouping, #27 danger zone)
+   ========================================================================= */
+.op-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:var(--sp-lg)}
+.op{
+  background:var(--offwhite); border:1px solid var(--lightgray); border-radius:var(--r-md);
+  padding:var(--sp-lg); display:flex; flex-direction:column;
+}
+.op h3{margin:0 0 6px; font-size:15px; font-weight:600; color:var(--charcoal)}
+.op p{margin:0 0 var(--sp-base); font-size:12.5px; color:var(--midgray); flex:1 1 auto}
+.op .note{font-size:11px; font-style:italic; color:var(--midgray); margin-top:8px}
+.op .field{margin-bottom:var(--sp-md)}
+.op-actions{margin-top:auto}
+.danger-zone{
+  border:1px solid var(--error); border-radius:var(--r-md); padding:var(--sp-lg); margin-top:var(--sp-lg);
+  background:#fdf3f2;
+}
+.danger-label{font-size:11px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--error); margin-bottom:10px}
+
+/* Collapsible section accordion (native <details name=> = single-open) — Operations: Guest Communications + Advanced */
+.acc{border-top:1px solid var(--lightgray)}
+.acc:first-of-type{border-top:none}
+.acc-summary{
+  display:flex; align-items:center; gap:12px; cursor:pointer; list-style:none;
+  padding:var(--sp-lg) 0;
+}
+.acc-summary::-webkit-details-marker{display:none}
+.acc-summary::marker{content:""}
+.acc-summary:hover .acc-title{color:var(--teal)}
+.acc-title{font-size:20px; font-weight:700; color:var(--charcoal)}
+.acc-hint{font-size:12px; color:var(--midgray)}
+.acc .chev{margin-left:auto; color:var(--midgray); transition:transform .2s; flex:0 0 auto}
+.acc[open] .chev{transform:rotate(180deg)}
+.acc-body{padding:0 0 var(--sp-lg)}
+
+/* =========================================================================
+   Tables
+   ========================================================================= */
+.table-wrap{overflow-x:auto; margin-top:var(--sp-md)}
+table{width:100%; border-collapse:collapse; font-size:13px}
+thead th{
+  text-align:left; font-weight:600; color:var(--charcoal); font-size:12px;
+  padding:12px 14px; border-bottom:2px solid var(--lightgray); white-space:nowrap;
+}
+tbody td{padding:14px; border-bottom:1px solid var(--lightgray); color:var(--charcoal)}
+tbody tr:hover{background:var(--offwhite)}
+.col-link{color:var(--aqua); font-weight:500}
+.row-count{font-size:12px; color:var(--midgray); margin-top:var(--sp-md)}
+
+/* empty state (FIX #31, #34, orders) */
+.empty{
+  text-align:center; padding:var(--sp-2xl) var(--sp-base); color:var(--midgray);
+}
+.empty .e-ico{width:52px; height:52px; border-radius:99px; background:var(--mint); color:var(--teal);
+  display:grid; place-items:center; margin:0 auto var(--sp-base); font-size:24px}
+.empty .e-title{font-size:15px; font-weight:600; color:var(--charcoal); margin-bottom:4px}
+.empty .e-sub{font-size:13px; margin-bottom:var(--sp-base)}
+
+/* =========================================================================
+   Orders filters (FIX #35, #36)
+   ========================================================================= */
+.orders-head{display:flex; align-items:center; gap:var(--sp-base); flex-wrap:wrap; margin-bottom:var(--sp-base)}
+.search-box{position:relative; flex:1 1 280px}
+.search-box input{padding-right:80px}
+.search-box .s-btn{position:absolute; right:6px; top:6px; bottom:6px; border:none; background:none; color:var(--aqua); font-weight:600; cursor:pointer; padding:0 10px; display:flex; align-items:center; gap:4px}
+.filters{display:grid; grid-template-columns:repeat(6,1fr); gap:var(--sp-md); margin-bottom:var(--sp-base)}
+.filter label{font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.3px; color:var(--midgray); margin-bottom:5px; display:block}
+
+/* =========================================================================
+   Page Builder list (FIX #16 rename handled in markup, #17 row count)
+   ========================================================================= */
+
+/* =========================================================================
+   Dashboard chart placeholders
+   ========================================================================= */
+.charts{display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-lg); margin-top:var(--sp-base)}
+.chart{
+  border:1px solid var(--lightgray); border-radius:var(--r-md); padding:var(--sp-lg);
+  min-height:240px; display:flex; flex-direction:column;
+}
+.chart h3{margin:0 0 var(--sp-base); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:var(--midgray)}
+.chart .plot{flex:1 1 auto; display:grid; place-items:center; background:repeating-linear-gradient(0deg,transparent,transparent 38px,var(--offwhite) 38px,var(--offwhite) 39px); border-radius:var(--r-sm)}
+.chart .no-data{color:var(--midgray); font-size:13px; text-align:center}
+.chart .no-data .nd-ico{font-size:22px; display:block; margin-bottom:6px; opacity:.6}
+
+/* =========================================================================
+   Footer
+   ========================================================================= */
+.foot{text-align:center; padding:var(--sp-lg); color:var(--midgray); font-size:12px}
+.foot b{color:var(--teal); font-weight:600}
+
+/* =========================================================================
+   Responsive
+   ========================================================================= */
+@media (max-width:1024px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .charts{grid-template-columns:1fr}
+}
+@media (max-width:820px){
+  .sidebar{display:none}
+  .grid-3,.grid-2,.op-grid,.trigger .row{grid-template-columns:1fr}
+  .filters{grid-template-columns:1fr 1fr}
+  .checks{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .card{padding:var(--sp-lg)}
+  .event-actions{align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== SIDEBAR (FIX #1) ===================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span>F<span style="font-variant:small-caps">O</span>H Pass<span class="dot">.</span></span>
+      <svg class="eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+    <ul class="nav">
+      <li><a href="#" class="active"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Events</a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profiles</a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18l-7 9v6l-4 2v-8z"/></svg>Check Ins</a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Company Settings<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Campaign<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="13" y="7" width="3" height="10"/></svg>Reports<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Operations<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1l-.4-2.5h-4l-.4 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z"/></svg>Settings<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg>Payment Orders</a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5v8l-9 5-9-5V8z"/><circle cx="12" cy="12" r="2.5"/></svg>Super Admin Board<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+      <li><a href="#"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h13l-3-3M21 16H8l3 3"/></svg>Switch Module<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+    </ul>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="main">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="company-switch">
+        <span>24. GraspStudios</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>
+      </div>
+      <div class="credits">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Credits
+      </div>
+      <div class="bell">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span class="badge">5</span>
+      </div>
+      <div class="avatar">
+        <span class="circle">GA</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 10l5 5 5-5"/></svg>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="wrap">
+
+        <!-- ===================== EVENT HEADER ===================== -->
+        <section class="event-head" id="eventHead">
+          <div class="eh-left">
+            <!-- Artwork thumbnail — shown only when an event artwork has been uploaded -->
+            <div class="event-art" title="Event artwork">
+              <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#C9E9EB" stroke-width="1.5"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>
+            </div>
+            <div class="eh-info">
+              <div class="title-row">
+                <h1>NYE 2027</h1>
+                <span class="status-pill pill-unpub">Not Published</span>
+                <span class="status-pill pill-pub"><span class="live-dot"></span>Published</span>
+              </div>
+              <div class="event-meta">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                Dec 31, 2026
+              </div>
+              <div class="event-url"><a href="#">https://foh.solutions/pass/registration/event-page/nye-2027</a></div>
+            </div>
+          </div>
+          <div class="event-actions">
+            <div class="ea-primary">
+              <button class="btn btn-primary" type="button">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                Reservation Map
+              </button>
+              <button class="btn btn-publish" type="button" onclick="togglePublish()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 21h14"/></svg>
+                Publish event
+              </button>
+              <div class="pub-state">
+                <span class="pub-live"><span class="live-dot"></span>Live</span>
+                <button class="btn btn-ghost btn-sm" type="button" onclick="togglePublish()">Unpublish</button>
+              </div>
+            </div>
+            <div class="ea-secondary">
+              <a class="btn btn-ghost btn-sm" href="https://foh.solutions/pass/registration/event-page/nye-2027" target="_blank" rel="noopener">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/></svg>
+                Preview
+              </a>
+              <button class="btn btn-ghost btn-sm" type="button" onclick="copyEventLink(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                <span class="cl-text">Copy link</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================== STAT BAR (FIX #4, #5) ===================== -->
+        <section class="stats">
+          <div class="stat"><div class="num">0</div><div class="lbl">Confirmed Tickets</div></div>
+          <div class="stat"><div class="num">0</div><div class="lbl">Total Paid Tickets</div></div>
+          <!-- FIX #5: FOC -> Complimentary -->
+          <div class="stat"><div class="num">0</div><div class="lbl">Complimentary</div></div>
+          <div class="stat"><div class="num">0</div><div class="lbl">Pending Approval</div></div>
+          <div class="stat"><div class="num">0</div><div class="lbl">Pending Payment</div></div>
+          <div class="stat sales"><div class="num">0 EGP</div><div class="lbl">Total Sale</div></div>
+        </section>
+
+        <!-- ===================== TAB BAR (FIX #2, #3) ===================== -->
+        <nav class="tabbar">
+          <div class="tabs">
+            <button class="tab" data-tab="dashboard">Dashboard</button>
+            <button class="tab active" data-tab="details">Details</button>
+            <!-- FIX #16: "Page Builder" -> "Content" -->
+            <button class="tab" data-tab="content">Content</button>
+            <button class="tab" data-tab="ticket-types">Ticket Types</button>
+            <button class="tab" data-tab="pass-codes">Pass Codes</button>
+            <button class="tab" data-tab="notifications">Notifications</button>
+            <button class="tab" data-tab="orders">Orders</button>
+            <button class="tab" data-tab="operations">Operations</button>
+          </div>
+          <!-- Import + Export: global data actions (Floor Plan moved to the event header) -->
+          <div class="tabbar-actions">
+            <button class="btn btn-ghost btn-sm">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+              Import
+            </button>
+            <details class="exp-menu">
+              <summary class="btn btn-ghost btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9M7 14l5-5 5 5"/><path d="M5 3h14"/></svg>
+                Export
+                <svg class="chev-sm" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>
+              </summary>
+              <div class="exp-list">
+                <button class="exp-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6a2 2 0 0 0 0-4z"/></svg>Export Tickets</button>
+                <button class="exp-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Export Payments</button>
+                <button class="exp-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>Export RSVP Status</button>
+              </div>
+            </details>
+          </div>
+        </nav>
+
+        <!-- ===================== DASHBOARD ===================== -->
+        <section class="panel" id="dashboard">
+          <div class="card">
+            <div class="card-head"><h2>Dashboard</h2></div>
+            <div class="charts">
+              <div class="chart"><h3>Total Tickets</h3><div class="plot"><div class="no-data"><span class="nd-ico">📊</span>No ticket data yet</div></div></div>
+              <div class="chart"><h3>Confirmed Tickets %</h3><div class="plot"><div class="no-data"><span class="nd-ico">◔</span>No confirmed tickets yet</div></div></div>
+              <div class="chart"><h3>Gender Ratio %</h3><div class="plot"><div class="no-data"><span class="nd-ico">◑</span>No data yet</div></div></div>
+              <div class="chart"><h3>Tickets per Gender</h3><div class="plot"><div class="no-data"><span class="nd-ico">📊</span>No data yet</div></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================== DETAILS ===================== -->
+        <section class="panel active" id="details">
+          <div class="card">
+            <div class="card-head">
+              <!-- FIX #6 -->
+              <h2>Event Details</h2>
+              <!-- FIX #7: ghost, not filled -->
+              <button class="btn btn-ghost btn-sm">Activity Log</button>
+            </div>
+
+            <div class="grid-3">
+              <div class="field">
+                <label>Event Name <span class="req">*</span></label>
+                <input type="text" value="NYE 2027">
+              </div>
+              <div class="field">
+                <label>Host</label>
+                <input type="text" value="IQOS">
+              </div>
+              <div class="field">
+                <label>Branch</label>
+                <select><option>Test Studios - Grasp Branch</option></select>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <!-- FIX #8 -->
+                <label>Event Artwork</label>
+                <div class="file-input"><span class="fake-btn">Choose File</span><span>No file selected</span></div>
+                <span class="help">Square image recommended — 500 × 500px minimum.</span>
+              </div>
+              <div class="field">
+                <label>Cover Preview</label>
+                <div class="preview-square">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C9E9EB" stroke-width="1.5"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-3">
+              <div class="field">
+                <label>Event Primary Color</label>
+                <input type="color" class="color-input" value="#0DB5C6">
+              </div>
+              <div class="field">
+                <!-- FIX #9: tooltip -->
+                <label class="lbl-field">FOH Icon Color
+                  <span class="tip"><span class="tip-ico">i</span><span class="tip-text">Controls the color of the FOH watermark shown on guest tickets.</span></span>
+                </label>
+                <input type="color" class="color-input" value="#085859">
+              </div>
+              <div class="field">
+                <label>Tickets Confirmed Label</label>
+                <input type="text" value="Confirmed!">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Tickets Confirmed Description</label>
+              <!-- FIX #10: typo "book" -> "booked" -->
+              <textarea>Congrats, you have booked NYE 2027</textarea>
+            </div>
+
+            <div class="grid-3">
+              <div class="field">
+                <label>Currency</label>
+                <select disabled><option>Egyptian Pound</option></select>
+              </div>
+            </div>
+
+            <h3 class="section-title">Timing &amp; Location</h3>
+            <div class="grid-3">
+              <div class="field">
+                <label>Event Date <span class="req">*</span></label>
+                <input type="date" value="2026-12-31">
+              </div>
+            </div>
+            <div class="grid-3">
+              <div class="field">
+                <label>Location <span class="req">*</span></label>
+                <input type="text" value="Heliopolis">
+              </div>
+              <div class="field">
+                <label>GPS Location URL <span class="req">*</span></label>
+                <input type="url" value="https://maps.app.goo.gl/D1xySEAAYBj9WaZz5">
+              </div>
+              <div class="field">
+                <label>Layout</label>
+                <select><option>Floor Plan</option><option>Standing</option></select>
+              </div>
+            </div>
+
+            <h3 class="section-title">Configurations</h3>
+            <div class="grid-3">
+              <div class="field">
+                <!-- FIX #11: Gender Ratio -> Attendance Policy -->
+                <label>Attendance Policy</label>
+                <select id="attendancePolicy" onchange="onPolicyChange(this)">
+                  <option value="mixed">Mixed</option>
+                  <option value="male">Male Only</option>
+                  <option value="female">Female Only</option>
+                  <option value="ratio">Custom Ratio</option>
+                </select>
+              </div>
+              <!-- FIX #12: hidden unless a gendered policy is selected -->
+              <div class="field" id="maxMaleField" style="display:none">
+                <label>Maximum Male Percentage</label>
+                <input type="number" value="50" min="0" max="100">
+              </div>
+              <div class="field">
+                <!-- FIX #13 -->
+                <label>Minimum Age</label>
+                <input type="number" value="21" placeholder="0 (no minimum)">
+              </div>
+            </div>
+
+            <!-- FIX #14 + #15: grouped permissions, rewritten labels -->
+            <div class="permissions">
+              <div class="group-label">Guest Permissions</div>
+              <div class="checks">
+                <label class="check"><input type="checkbox" checked>Require email address</label>
+                <label class="check"><input type="checkbox">Require social media handle</label>
+                <label class="check"><input type="checkbox" checked>Guest can edit their own orders</label>
+                <label class="check"><input type="checkbox" checked>Guest can edit admin-created orders</label>
+                <label class="check"><input type="checkbox">Show guest list QR code with host link</label>
+              </div>
+              <div class="subgroup">
+                <div class="group-label">Prepayment OTP Challenge</div>
+                <label class="check"><input type="checkbox">Enable OTP challenge before payment</label>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary btn-lg">Save</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================== CONTENT (was Page Builder) ===================== -->
+        <section class="panel" id="content">
+          <div class="card">
+            <div class="card-head">
+              <h2>Content Sections</h2>
+              <button class="btn btn-primary btn-sm">+ Add new</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Title</th><th>Type</th></tr></thead>
+                <tbody>
+                  <tr><td><a class="col-link" href="#">Event Description</a></td><td>Text</td></tr>
+                  <tr><td><a class="col-link" href="#">House Rules</a></td><td>Event Rules</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- FIX #17: subtle row count, not dark bar -->
+            <div class="row-count">2 sections</div>
+          </div>
+        </section>
+
+        <!-- ===================== TICKET TYPES ===================== -->
+        <section class="panel" id="ticket-types">
+
+          <!-- LIST VIEW -->
+          <div class="card tt-list">
+            <div class="card-head">
+              <h2>Ticket Types</h2>
+              <button class="btn btn-primary btn-sm" type="button" onclick="showTicketForm()">+ Add new</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th>Title</th><th>Type</th><th>Confirmed</th><th>Rejected</th>
+                  <th>Pending Payment</th><th>Pending Approval</th>
+                  <th>Avail. / Total</th><th>Price</th><th>Total Sales</th>
+                </tr></thead>
+              </table>
+            </div>
+            <div class="empty">
+              <div class="e-ico">🎟️</div>
+              <div class="e-title">No ticket types yet</div>
+              <div class="e-sub">Create your first ticket type to start selling.</div>
+              <button class="btn btn-primary btn-sm" type="button" onclick="showTicketForm()">+ Add your first ticket type</button>
+            </div>
+          </div>
+
+          <!-- FORM VIEW — Add New Ticket Type (hidden until "Add new") -->
+          <div class="card tt-form" style="display:none">
+            <div class="form-header">
+              <div>
+                <button class="back" type="button" onclick="hideTicketForm()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                  Ticket Types
+                </button>
+                <h2>Add Ticket Type</h2>
+              </div>
+              <div class="fh-actions">
+                <button class="btn btn-ghost" type="button" onclick="hideTicketForm()">Cancel</button>
+                <button class="btn btn-primary" type="button">Save ticket type</button>
+              </div>
+            </div>
+
+            <!-- Ticket details -->
+            <h3 class="section-title" style="margin-top:0">Ticket details</h3>
+            <div class="grid-2">
+              <div class="field">
+                <label>Name <span class="req">*</span></label>
+                <input type="text" placeholder="e.g. Early Bird, VIP Table, Guestlist">
+              </div>
+              <div class="field">
+                <label>Type <span class="req">*</span></label>
+                <select>
+                  <option value="" disabled selected>Select a type</option>
+                  <option>General Admission</option>
+                  <option>VIP</option>
+                  <option>Table</option>
+                  <option>Guestlist</option>
+                  <option>Complimentary</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Description</label>
+              <textarea placeholder="Shown to guests on the event page (optional)."></textarea>
+            </div>
+
+            <!-- Pricing & capacity -->
+            <h3 class="section-title">Pricing &amp; capacity</h3>
+            <div class="grid-3">
+              <div class="field">
+                <label>Price</label>
+                <div class="input-prefix"><span class="pfx">EGP</span><input type="number" min="0" placeholder="0"></div>
+                <span class="help">Enter 0 for a free ticket.</span>
+              </div>
+              <div class="field">
+                <label>Quantity</label>
+                <input type="number" min="0" placeholder="Unlimited">
+                <span class="help">Total available. Leave blank for unlimited.</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Tickets per order</label>
+              <div class="grid-2" style="max-width:420px">
+                <input type="number" min="1" placeholder="Minimum">
+                <input type="number" min="1" placeholder="Maximum">
+              </div>
+              <span class="help">How many of this ticket one guest can buy in a single order.</span>
+            </div>
+
+            <!-- Access & entry -->
+            <h3 class="section-title">Access &amp; entry</h3>
+            <div class="grid-3">
+              <div class="field">
+                <label>Entry mode <span class="req">*</span></label>
+                <select><option>Single Entry</option><option>Multi Entry</option><option>Re-entry allowed</option></select>
+                <span class="help">How many times the ticket can be scanned at the door.</span>
+              </div>
+            </div>
+            <!-- Order approval: approval (before payment) and confirmation (after payment) are mutually exclusive -->
+            <div class="field" style="margin-bottom:var(--sp-base)">
+              <label>Order approval</label>
+              <div class="radio-cards">
+                <label class="radio-card">
+                  <input type="radio" name="approval" checked>
+                  <span class="rc-dot"></span>
+                  <span class="rc-text"><span class="rc-label">None</span><span class="rc-help">Guests buy and pay instantly.</span></span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="approval">
+                  <span class="rc-dot"></span>
+                  <span class="rc-text"><span class="rc-label">Require approval</span><span class="rc-help">Guests need operator approval before they can pay.</span></span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="approval">
+                  <span class="rc-dot"></span>
+                  <span class="rc-text"><span class="rc-label">Require confirmation</span><span class="rc-help">Guests confirm their order after payment.</span></span>
+                </label>
+              </div>
+            </div>
+            <div class="toggles">
+              <label class="toggle-card">
+                <span class="switch"><input type="checkbox"><span class="track"></span><span class="thumb"></span></span>
+                <span class="tc-text"><span class="tc-label">Private ticket</span><span class="tc-help">Hidden from the public page. Guests need a passcode to find it.</span></span>
+              </label>
+              <label class="toggle-card">
+                <span class="switch"><input type="checkbox"><span class="track"></span><span class="thumb"></span></span>
+                <span class="tc-text"><span class="tc-label">Seated ticket</span><span class="tc-help">Assign guests to specific tables or seats.</span></span>
+              </label>
+            </div>
+
+            <!-- Availability -->
+            <h3 class="section-title">Availability</h3>
+            <div class="grid-2">
+              <div class="dt-col">
+                <label class="lbl-field">Available from</label>
+                <div class="dt-row"><input type="date"><input type="time"></div>
+              </div>
+              <div class="dt-col">
+                <label class="lbl-field">Available until</label>
+                <div class="dt-row"><input type="date"><input type="time"></div>
+              </div>
+            </div>
+            <div class="grid-3" style="margin-top:var(--sp-base)">
+              <div class="field">
+                <label>Payment deadline</label>
+                <select><option>No deadline</option><option>Hours after order</option><option>Fixed date &amp; time</option></select>
+                <span class="help">When unpaid orders expire and release their tickets.</span>
+              </div>
+            </div>
+
+            <!-- Ticket tier -->
+            <h3 class="section-title">Ticket tier <span style="font-weight:400; font-size:13px; color:var(--midgray)">(optional)</span></h3>
+            <div class="grid-3">
+              <div class="field">
+                <label>Parent ticket</label>
+                <select><option>No parent ticket</option></select>
+                <span class="help">Link to a parent so guests can upgrade or downgrade between tiers.</span>
+              </div>
+            </div>
+
+            <div class="form-actions" style="justify-content:flex-end; gap:var(--sp-sm)">
+              <button class="btn btn-ghost" type="button" onclick="hideTicketForm()">Cancel</button>
+              <button class="btn btn-primary btn-lg" type="button">Save ticket type</button>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ===================== PASS CODES (FIX #32) ===================== -->
+        <section class="panel" id="pass-codes">
+
+          <!-- LIST VIEW -->
+          <div class="card pc-list">
+            <div class="card-head">
+              <h2>Pass Codes</h2>
+              <button class="btn btn-primary btn-sm" type="button" onclick="showPassForm()">+ Add new</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Code</th><th>Total Uses</th><th>Used</th><th>Note</th></tr></thead>
+              </table>
+            </div>
+            <div class="empty">
+              <div class="e-ico">#</div>
+              <div class="e-title">No pass codes yet</div>
+              <div class="e-sub">Create a code that unlocks specific ticket types for guests.</div>
+              <button class="btn btn-primary btn-sm" type="button" onclick="showPassForm()">+ Add your first pass code</button>
+            </div>
+          </div>
+
+          <!-- FORM VIEW — Add Pass Code -->
+          <div class="card pc-form" style="display:none">
+            <div class="form-header">
+              <div>
+                <button class="back" type="button" onclick="hidePassForm()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                  Pass Codes
+                </button>
+                <h2>Add Pass Code</h2>
+              </div>
+              <div class="fh-actions">
+                <button class="btn btn-ghost" type="button" onclick="hidePassForm()">Cancel</button>
+                <button class="btn btn-primary" type="button">Save pass code</button>
+              </div>
+            </div>
+
+            <!-- Plain-language explainer: the thing the old form never told anyone -->
+            <div class="banner banner-info" style="margin-bottom:var(--sp-lg)">
+              <span class="b-ico">ℹ️</span>
+              <span>A Pass Code is a code guests type on the public page to unlock the ticket types you attach below. What a guest gets depends on those types: attach a free (FOC) type for free entry, a discounted tier for a deal, or a private type just to reveal it.</span>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label>Code <span class="req">*</span></label>
+                <input type="text" placeholder="e.g. family&amp;friends">
+                <span class="help">The exact text guests type on the public page to redeem it.</span>
+              </div>
+              <div class="field">
+                <label>Total uses <span class="req">*</span></label>
+                <input type="number" min="1" placeholder="10">
+                <span class="help">How many times the code can be redeemed. Each redemption is one order and can include several guests.</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Unlocks these ticket types <span class="req">*</span></label>
+              <div class="permissions" style="margin-top:0">
+                <div class="checks">
+                  <label class="check"><input type="checkbox" checked>FOC (free)</label>
+                  <label class="check"><input type="checkbox">General Admission</label>
+                  <label class="check"><input type="checkbox">VIP</label>
+                  <label class="check"><input type="checkbox">Guestlist</label>
+                </div>
+              </div>
+              <span class="help">Guests who enter this code can book the types you tick. Each type keeps its own price.</span>
+            </div>
+
+            <div class="field">
+              <label>Note <span style="font-weight:400; color:var(--midgray)">(internal)</span></label>
+              <input type="text" placeholder="What is this code for? Only your team sees this.">
+            </div>
+
+            <div class="form-actions" style="justify-content:flex-end; gap:var(--sp-sm)">
+              <button class="btn btn-ghost" type="button" onclick="hidePassForm()">Cancel</button>
+              <button class="btn btn-primary btn-lg" type="button">Save pass code</button>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ===================== NOTIFICATIONS ===================== -->
+        <section class="panel" id="notifications">
+          <div class="card">
+            <div class="card-head"><h2>Notifications</h2></div>
+            <!-- FIX #18: visible info banner -->
+            <div class="banner banner-info" style="margin-bottom:var(--sp-lg)">
+              <span class="b-ico">ℹ️</span>
+              <span>Select at least one template from every section before saving.</span>
+            </div>
+
+            <!-- Triggers 1-6: 3-column grid, channels stacked + icon-coded -->
+            <div class="notif-grid">
+
+              <div class="trigger">
+                <h3>When a guest creates a new ticket order</h3>
+                <div class="channels">
+                  <div class="ch-row"><span class="ch-ico ch-sms" title="SMS"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><select aria-label="SMS template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-email" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><select aria-label="Email template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-wa" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg></span><select aria-label="WhatsApp template"><option>No template</option></select></div>
+                </div>
+              </div>
+
+              <div class="trigger">
+                <h3>When a guest's request is approved</h3>
+                <p class="sub">Applies to approval-required ticket types.</p>
+                <div class="channels">
+                  <div class="ch-row"><span class="ch-ico ch-sms" title="SMS"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><select aria-label="SMS template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-email" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><select aria-label="Email template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-wa" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg></span><select aria-label="WhatsApp template"><option>No template</option></select></div>
+                </div>
+              </div>
+
+              <div class="trigger">
+                <h3>When a guest's request is rejected or canceled</h3>
+                <div class="channels">
+                  <div class="ch-row"><span class="ch-ico ch-sms" title="SMS"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><select aria-label="SMS template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-email" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><select aria-label="Email template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-wa" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg></span><select aria-label="WhatsApp template"><option>No template</option></select></div>
+                </div>
+              </div>
+
+              <div class="trigger">
+                <h3>When a guest successfully purchases their tickets</h3>
+                <div class="channels">
+                  <div class="ch-row"><span class="ch-ico ch-sms" title="SMS"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><select aria-label="SMS template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-email" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><select aria-label="Email template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-wa" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg></span><select aria-label="WhatsApp template"><option>No template</option></select></div>
+                </div>
+              </div>
+
+              <div class="trigger">
+                <h3>When an admin sends a payment link to a guest</h3>
+                <div class="channels">
+                  <div class="ch-row"><span class="ch-ico ch-sms" title="SMS"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><select aria-label="SMS template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-email" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><select aria-label="Email template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-wa" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg></span><select aria-label="WhatsApp template"><option>No template</option></select></div>
+                </div>
+              </div>
+
+              <div class="trigger">
+                <h3>When a guest's request is pending confirmation</h3>
+                <div class="channels">
+                  <div class="ch-row"><span class="ch-ico ch-sms" title="SMS"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><select aria-label="SMS template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-email" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><select aria-label="Email template"><option>No template</option></select></div>
+                  <div class="ch-row"><span class="ch-ico ch-wa" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg></span><select aria-label="WhatsApp template"><option>No template</option></select></div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Trigger 7: kept full-width and horizontal, with the same icon labels -->
+            <div class="trigger">
+              <h3>When a status update occurs on the request</h3>
+              <p class="sub">Request expired, tier switching, refunding.</p>
+              <div class="row">
+                <div class="ch-row"><span class="ch-ico ch-sms" title="SMS"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><select aria-label="SMS template"><option>No template</option></select></div>
+                <div class="ch-row"><span class="ch-ico ch-email" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><select aria-label="Email template"><option>No template</option></select></div>
+                <div class="ch-row"><span class="ch-ico ch-wa" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg></span><select aria-label="WhatsApp template"><option>No template</option></select></div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary btn-lg">Save</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================== ORDERS ===================== -->
+        <section class="panel" id="orders">
+          <div class="card">
+            <div class="orders-head">
+              <h2 style="margin:0; font-size:22px; font-weight:700">Ticket Orders</h2>
+              <!-- FIX #35 -->
+              <span class="row-count" style="margin:0">0 orders</span>
+              <div class="search-box" style="margin-left:auto">
+                <input type="text" placeholder="Search name or mobile…">
+                <button class="s-btn">search
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                </button>
+              </div>
+            </div>
+            <!-- FIX #36: lighter filter labels -->
+            <div class="filters">
+              <div class="filter"><label>Type</label><select><option>All Types</option></select></div>
+              <div class="filter"><label>Status</label><select><option>Active Only</option></select></div>
+              <div class="filter"><label>Allocated Tables</label><select><option>All Tables</option></select></div>
+              <div class="filter"><label>Client Category</label><select><option>All Categories</option></select></div>
+              <div class="filter"><label>Ticket Type</label><select><option>All</option></select></div>
+              <div class="filter"><label>Attended</label><select><option>All</option></select></div>
+            </div>
+            <!-- FIX #37: horizontal scroll wrapper so "Allow +1" isn't clipped -->
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th>Name</th><th>Ticket</th><th>Status</th><th>Payment Status</th><th>Deadline</th><th>Allow +1</th>
+                </tr></thead>
+              </table>
+            </div>
+            <div class="empty">
+              <div class="e-ico">🧾</div>
+              <div class="e-title">No orders yet</div>
+              <div class="e-sub">Orders will appear here once guests start registering.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================== OPERATIONS ===================== -->
+        <section class="panel" id="operations">
+          <div class="card">
+            <div class="card-head"><h2>Operations</h2></div>
+
+            <!-- Export lifted out to the global Import / Export actions in the top toolbar -->
+            <!-- Guest Communications + Advanced form one single-open accordion (native details name=) -->
+            <details class="acc" name="ops-section">
+              <summary class="acc-summary">
+                <span class="acc-title">Guest Communications</span>
+                <span class="acc-hint">Reminders, resends &amp; notifications</span>
+                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>
+              </summary>
+              <div class="acc-body">
+                <div class="op-grid">
+              <div class="op">
+                <h3>Resend Confirmed Tickets</h3>
+                <p>Resend all confirmed tickets via SMS, email, or both. Uses the templates set on the Notifications tab.</p>
+                <div class="field"><label>Choose Ticket Type</label><select><option>All Ticket Types</option></select></div>
+                <div class="op-actions"><button class="btn btn-primary btn-sm">Send</button></div>
+              </div>
+              <div class="op">
+                <h3>Send Reminder to Pending Payment</h3>
+                <p>Remind guests with pending payment. Requires an Event Notification template.</p>
+                <div class="field"><label>SMS Template</label><select><option>No SMS Reminder</option></select></div>
+                <div class="field"><label>Email Template</label><select><option>No Email Reminder</option></select></div>
+                <!-- FIX #28 -->
+                <p class="note">WhatsApp is not available for this reminder.</p>
+                <div class="op-actions"><button class="btn btn-primary btn-sm">Send</button></div>
+              </div>
+              <div class="op">
+                <h3>Send Notification to Expired Tickets</h3>
+                <p>Notify guests with expired tickets. Requires an Event Notification template.</p>
+                <div class="field"><label>SMS Template</label><select><option>No SMS Reminder</option></select></div>
+                <div class="field"><label>Email Template</label><select><option>No Email Reminder</option></select></div>
+                <p class="note">WhatsApp is not available for this notification.</p>
+                <div class="op-actions"><button class="btn btn-primary btn-sm">Send</button></div>
+              </div>
+              <div class="op">
+                <h3>Send Notification to Rejected Tickets</h3>
+                <p>Notify guests with rejected tickets. Requires an Event Notification template.</p>
+                <div class="field"><label>SMS Template</label><select><option>No SMS Reminder</option></select></div>
+                <div class="field"><label>Email Template</label><select><option>No Email Reminder</option></select></div>
+                <p class="note">WhatsApp is not available for this notification.</p>
+                <div class="op-actions"><button class="btn btn-primary btn-sm">Send</button></div>
+              </div>
+              <div class="op">
+                <h3>Send Reminder to Pending RSVP</h3>
+                <p>Remind guests with pending RSVPs via SMS, email, or WhatsApp. Requires an Event Notification template.</p>
+                <div class="field"><label>SMS Template</label><select><option>No SMS Reminder</option></select></div>
+                <div class="field"><label>Email Template</label><select><option>No Email Reminder</option></select></div>
+                <div class="field"><label>WhatsApp Template</label><select><option>No WhatsApp Reminder</option></select></div>
+                <div class="op-actions"><button class="btn btn-primary btn-sm">Send</button></div>
+              </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- Advanced: collapsed by default — Event URL + destructive actions tucked away -->
+            <details class="acc" name="ops-section">
+              <summary class="acc-summary">
+                <span class="acc-title">Advanced</span>
+                <span class="acc-hint">Event URL &amp; destructive actions</span>
+                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>
+              </summary>
+              <div class="acc-body">
+                <div class="op-grid">
+                  <div class="op">
+                    <h3>Update Event URL</h3>
+                    <div class="banner banner-warn" style="margin-bottom:var(--sp-md)">
+                      <span class="b-ico">⚠️</span>
+                      <span>This affects every existing link FOH created for this event, including confirmed tickets.</span>
+                    </div>
+                    <div class="field"><label>New Event Alias</label><input type="text" value="nye-2027"></div>
+                    <div class="op-actions"><button class="btn btn-primary btn-sm">Save</button></div>
+                  </div>
+                </div>
+                <div class="danger-zone">
+                  <div class="danger-label">⚠ Danger Zone — Irreversible Action</div>
+                  <h3 style="margin:0 0 6px; font-size:15px; font-weight:600">Refund All Tickets</h3>
+                  <p style="margin:0 0 var(--sp-base); font-size:12.5px; color:var(--midgray)">This refunds every paid ticket for this event. This cannot be undone.</p>
+                  <button class="btn btn-danger btn-sm">Refund All</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <footer class="foot">© 2026 <b>FOH v3</b>, by Grasp Studios</footer>
+  </div>
+</div>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById(t.dataset.tab).classList.add('active');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+
+  // FIX #12: show "Maximum Male Percentage" only for gendered policies
+  function onPolicyChange(sel){
+    document.getElementById('maxMaleField').style.display = (sel.value === 'mixed') ? 'none' : 'flex';
+  }
+
+  // Ticket Types: toggle between the list and the Add-New form (full-page, like the real module)
+  function showTicketForm(){
+    document.querySelector('.tt-list').style.display = 'none';
+    document.querySelector('.tt-form').style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  function hideTicketForm(){
+    document.querySelector('.tt-form').style.display = 'none';
+    document.querySelector('.tt-list').style.display = 'block';
+  }
+
+  // Pass Codes: toggle between the list and the Add-Pass-Code form
+  function showPassForm(){
+    document.querySelector('.pc-list').style.display = 'none';
+    document.querySelector('.pc-form').style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  function hidePassForm(){
+    document.querySelector('.pc-form').style.display = 'none';
+    document.querySelector('.pc-list').style.display = 'block';
+  }
+
+  // Publish / Unpublish — toggles the header between its two states
+  function togglePublish(){
+    document.getElementById('eventHead').classList.toggle('published');
+  }
+  // Copy the public event link (the same link Preview opens)
+  function copyEventLink(btn){
+    var url = 'https://foh.solutions/pass/registration/event-page/nye-2027';
+    if(navigator.clipboard){ navigator.clipboard.writeText(url); }
+    var t = btn.querySelector('.cl-text'); if(!t) return;
+    var prev = t.textContent; t.textContent = 'Copied!';
+    setTimeout(function(){ t.textContent = prev; }, 1500);
+  }
+
+  // Close the Export menu after choosing an item or clicking outside
+  var expMenu = document.querySelector('.exp-menu');
+  if (expMenu){
+    expMenu.querySelectorAll('.exp-item').forEach(function(i){
+      i.addEventListener('click', function(){ expMenu.removeAttribute('open'); });
+    });
+    document.addEventListener('click', function(e){
+      if (expMenu.open && !expMenu.contains(e.target)) expMenu.removeAttribute('open');
+    });
+  }
+</script>
+</body>
+</html>
