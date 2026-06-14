@@ -591,8 +591,8 @@ tbody tr:hover{background:var(--offwhite)}
         <section class="stats">
           <div class="stat"><div class="num">0</div><div class="lbl">Confirmed Tickets</div></div>
           <div class="stat"><div class="num">0</div><div class="lbl">Total Paid Tickets</div></div>
-          <!-- FIX #5: FOC -> Complimentary -->
-          <div class="stat"><div class="num">0</div><div class="lbl">Complimentary</div></div>
+          <!-- Free/comp tickets — labelled "FOH (Free)" per FOH terminology -->
+          <div class="stat"><div class="num">0</div><div class="lbl">FOH (Free)</div></div>
           <div class="stat"><div class="num">0</div><div class="lbl">Pending Approval</div></div>
           <div class="stat"><div class="num">0</div><div class="lbl">Pending Payment</div></div>
           <div class="stat sales"><div class="num">0 EGP</div><div class="lbl">Total Sale</div></div>
@@ -862,7 +862,7 @@ tbody tr:hover{background:var(--offwhite)}
                   <option>VIP</option>
                   <option>Table</option>
                   <option>Guestlist</option>
-                  <option>Complimentary</option>
+                  <option>FOH (Free)</option>
                 </select>
               </div>
             </div>
@@ -1014,7 +1014,7 @@ tbody tr:hover{background:var(--offwhite)}
             <!-- Plain-language explainer: the thing the old form never told anyone -->
             <div class="banner banner-info" style="margin-bottom:var(--sp-lg)">
               <span class="b-ico">ℹ️</span>
-              <span>A Pass Code is a code guests type on the public page to unlock the ticket types you attach below. What a guest gets depends on those types: attach a free (FOC) type for free entry, a discounted tier for a deal, or a private type just to reveal it.</span>
+              <span>A Pass Code is a code guests type on the public page to unlock the ticket types you attach below. What a guest gets depends on those types: attach an FOH (Free) type for free entry, a discounted tier for a deal, or a private type just to reveal it.</span>
             </div>
 
             <div class="grid-2">
@@ -1034,7 +1034,7 @@ tbody tr:hover{background:var(--offwhite)}
               <label>Unlocks these ticket types <span class="req">*</span></label>
               <div class="permissions" style="margin-top:0">
                 <div class="checks">
-                  <label class="check"><input type="checkbox" checked>FOC (free)</label>
+                  <label class="check"><input type="checkbox" checked>FOH (Free)</label>
                   <label class="check"><input type="checkbox">General Admission</label>
                   <label class="check"><input type="checkbox">VIP</label>
                   <label class="check"><input type="checkbox">Guestlist</label>
