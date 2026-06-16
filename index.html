@@ -169,6 +169,8 @@ a:hover{text-decoration:underline}
 .btn-lg{padding:12px 40px; font-size:14px}
 .btn-sm{padding:7px 12px; font-size:12px}
 .btn-block{width:100%}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+.empty.warn .e-ico{background:#FFF8E1; color:var(--warning)}
 
 /* =========================================================================
    Stat bar  (FIX #4 sizing, #5 FOC->Complimentary)
@@ -989,18 +991,19 @@ tbody tr:hover{background:var(--offwhite)}
           <div class="card pc-list">
             <div class="card-head">
               <h2>Pass Codes</h2>
-              <button class="btn btn-primary btn-sm" type="button" onclick="showPassForm()">+ Add new</button>
+              <button class="btn btn-primary btn-sm" type="button" onclick="showPassForm()" disabled title="Add a ticket type first">+ Add new</button>
             </div>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>Code</th><th>Total Uses</th><th>Used</th><th>Note</th></tr></thead>
               </table>
             </div>
-            <div class="empty">
-              <div class="e-ico">#</div>
-              <div class="e-title">No pass codes yet</div>
-              <div class="e-sub">Create a code that unlocks specific ticket types for guests.</div>
-              <button class="btn btn-primary btn-sm" type="button" onclick="showPassForm()">+ Add your first pass code</button>
+            <!-- Dependency guard: Pass Codes require at least one ticket type -->
+            <div class="empty warn">
+              <div class="e-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
+              <div class="e-title">Add a ticket type first</div>
+              <div class="e-sub">A Pass Code unlocks ticket types, so you need at least one before you can create a code.</div>
+              <button class="btn btn-primary btn-sm" type="button" onclick="goToTicketTypes()">Create a ticket type</button>
             </div>
           </div>
 
@@ -1319,10 +1322,18 @@ tbody tr:hover{background:var(--offwhite)}
   }
 
   // Pass Codes: toggle between the list and the Add-Pass-Code form
+  // Pass Codes require at least one ticket type. TICKET_TYPES = 0 means Add is blocked + warning shown.
+  var TICKET_TYPES = 0;
   function showPassForm(){
+    if (TICKET_TYPES === 0) { return; } // guard: nothing for a code to attach to yet
     document.querySelector('.pc-list').style.display = 'none';
     document.querySelector('.pc-form').style.display = 'block';
     window.scrollTo({top:0, behavior:'smooth'});
+  }
+  function goToTicketTypes(){
+    var tab = document.querySelector('[data-tab=ticket-types]');
+    if (tab) tab.click();
+    showTicketForm();
   }
   function hidePassForm(){
     document.querySelector('.pc-form').style.display = 'none';
